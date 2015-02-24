@@ -81,6 +81,8 @@ class MongoIO(host: String = "localhost", port: Int = 27017) extends DB with Upd
 
   def cleanDblValue(value: String): Double = value.drop(1).dropRight(1).toDouble
 
+  def cleanQuotes(value: String): String = value.drop(1).dropRight(1)
+
   def cleanEnText(value: String): String = value.drop(1).dropRight(4)
 
   def loadEntityImages(fname: String) = loadFile(fname, "entityImages", "img", filter = bothMFilter)
@@ -95,7 +97,7 @@ class MongoIO(host: String = "localhost", port: Int = 27017) extends DB with Upd
 
   def loadEntityAliases(fname: String) = loadFile(fname, "entityAliases", "alias", filter = mArgEnTextPairFilter, arg2Strip = x => x, clean = cleanEnText, arg2Index = true)
 
-  def loadEntityIds(fname: String) = loadFile(fname, "entityIds", "id", filter = mArgTypePairFilter, clean = cleanEnText, arg2Strip = x => x)
+  def loadEntityIds(fname: String) = loadFile(fname, "entityIds", "id", filter = mArgTypePairFilter, clean = cleanQuotes, arg2Strip = x => x)
 
   def loadEntityDescription(fname: String) = loadFile(fname, "entityDescription", "desc", filter = mArgEnTextPairFilter, clean = cleanEnText, arg2Strip = x => x)
 
