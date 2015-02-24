@@ -54,6 +54,30 @@ object LoadMongoDB extends LoadDB(new MongoIO, "/home/sameer/work/data/freebase/
   }
 }
 
+object NamesToIds extends MongoIO() {
+  def filter(mid: String): Boolean = {
+    descriptions(Seq(mid)).values.size > 0
+  }
+
+  def prominence(mid: String): Double = {
+    types(Seq(mid)).values.flatten.size.toDouble
+  }
+
+  def main(args: Array[String]): Unit = {
+    val file = args(0)
+    val output = args(1)
+    val writer = new PrintWriter(output)
+    val source = io.Source.fromFile(file)
+    for (line <- source.getLines()) {
+      val name = line.trim
+      val m = mid(Seq(name)).values.flatten.toSeq.filter(filter _)maxBy(m => prominence(m))
+      writer.println("%s\t%s".format(name, m))
+    }
+    writer.flush()
+    writer.close()
+  }
+}
+
 object FreebaseTypesFromIds extends MongoIO() {
   def main(args: Array[String]): Unit = {
     val file = args(0)
@@ -62,8 +86,7 @@ object FreebaseTypesFromIds extends MongoIO() {
     val source = io.Source.fromFile(file)
     for (line <- source.getLines()) {
       val mid = line.trim
-      val typeMIds = types(Seq(mid)).values.flatten.toSeq
-      val typs = ids(typeMIds).values.filter(t => !t.startsWith("user") && !t.startsWith("base"))
+      val typs = types(Seq(mid)).values.flatten.filter(t => !t.startsWith("user") && !t.startsWith("base") && !t.startsWith("common")).toSeq
       writer.println("%s\t%s".format(mid, typs.mkString("\t")))
     }
     writer.flush()
