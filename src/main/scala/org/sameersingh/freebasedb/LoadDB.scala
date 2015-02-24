@@ -63,7 +63,7 @@ object FreebaseTypesFromIds extends MongoIO() {
     for (line <- source.getLines()) {
       val mid = line.trim
       val typeMIds = types(Seq(mid)).values.flatten.toSeq
-      val typs = ids(typeMIds).values
+      val typs = ids(typeMIds).values.filter(t => !t.startsWith("user") && !t.startsWith("base"))
       writer.println("%s\t%s".format(mid, typs.mkString("\t")))
     }
     writer.flush()
