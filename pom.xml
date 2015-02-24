@@ -41,6 +41,11 @@
       <name>Scala-Tools Maven2 Repository</name>
       <url>http://scala-tools.org/repo-releases</url>
     </repository>
+    <repository>
+      <id>sonatype</id>
+      <name>Sonatype public</name>
+      <url>https://oss.sonatype.org/content/repositories/releases/</url>
+    </repository>
   </repositories>
 
   <pluginRepositories>
@@ -56,6 +61,13 @@
       <groupId>org.scala-lang</groupId>
       <artifactId>scala-library</artifactId>
       <version>${scala.version}</version>
+    </dependency>
+
+    <dependency>
+      <groupId>org.mongodb</groupId>
+      <artifactId>casbah_2.10</artifactId>
+      <version>2.7.2</version>
+      <type>pom</type>
     </dependency>
 
     <!-- Test -->
