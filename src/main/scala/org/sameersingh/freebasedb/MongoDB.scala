@@ -127,6 +127,8 @@ class MongoIO(host: String = "localhost", port: Int = 27017) extends DB with Upd
     result
   }
 
+  def ids(mids: Seq[String]): scala.collection.Map[String, String] = readOneFromDB(mids, "entityIds", o => o.get("id").toString)
+
   def alias(mids: Seq[String]): scala.collection.Map[String, Seq[String]] = readAllFromDB(mids, "entityAliases", o => o.get("alias").toString)
 
   def names(mids: Seq[String]): scala.collection.Map[String, String] = readOneFromDB(mids, "entityNames", o => o.get("name").toString)

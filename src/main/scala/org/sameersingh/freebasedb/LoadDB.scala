@@ -1,5 +1,7 @@
 package org.sameersingh.freebasedb
 
+import java.io.PrintWriter
+
 /**
  * @author sameer
  * @since 2/23/15.
@@ -34,7 +36,7 @@ object LoadMongoDB extends LoadDB(new MongoIO, "/home/sameer/work/data/freebase/
     db.loadEntityTypes(baseDir + "type.object.type.gz")
     println("done.")
 
-    print("Writing types... ")
+    print("Writing aliases... ")
     db.loadEntityAliases(baseDir + "common.topic.alias.gz")
     println("done.")
 
@@ -49,5 +51,22 @@ object LoadMongoDB extends LoadDB(new MongoIO, "/home/sameer/work/data/freebase/
     print("Writing latitudes... ")
     db.loadLatitude(baseDir + "location.geocode.latitude.gz")
     println("done.")
+  }
+}
+
+object FreebaseTypesFromIds extends MongoIO() {
+  def main(args: Array[String]): Unit = {
+    val file = args(0)
+    val output = args(1)
+    val writer = new PrintWriter(output)
+    val source = io.Source.fromFile(file)
+    for (line <- source.getLines()) {
+      val mid = line.trim
+      val typeMIds = types(Seq(mid)).values.flatten.toSeq
+      val typs = ids(typeMIds).values
+      writer.println("%s\t%s".format(mid, typs.mkString("\t")))
+    }
+    writer.flush()
+    writer.close()
   }
 }

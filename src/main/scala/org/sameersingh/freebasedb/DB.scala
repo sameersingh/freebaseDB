@@ -9,6 +9,8 @@ trait DB {
 
   def mid(names: Seq[String]): scala.collection.Map[String, Seq[String]] = throw new Error("not implemented")
 
+  def ids(mids: Seq[String]): scala.collection.Map[String, String]
+
   def alias(mids: Seq[String]): scala.collection.Map[String, Seq[String]]
 
   def names(mids: Seq[String]): scala.collection.Map[String, String]
