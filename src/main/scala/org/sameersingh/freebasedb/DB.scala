@@ -7,7 +7,7 @@ package org.sameersingh.freebasedb
  */
 trait DB {
 
-  def mid(names: Seq[String]): scala.collection.Map[String, Seq[String]] = throw new Error("not implemented")
+  def mid(names: Seq[String]): scala.collection.Map[String, Seq[String]]
 
   def ids(mids: Seq[String]): scala.collection.Map[String, String]
 
