@@ -67,7 +67,9 @@ class MongoIO(host: String = "localhost", port: Int = 27017) extends DB with Upd
 
   def mArgAnyPairFilter(split: Array[String]): Boolean = split(0).startsWith("m.")
 
-  def mArgTypePairFilter(split: Array[String]): Boolean = {
+  def mArgTypePairFilter(split: Array[String]): Boolean = split(0).startsWith("m.") && !split(2).startsWith("user") && !split(2).startsWith("base")
+
+  def mArgIdPairFilter(split: Array[String]): Boolean = {
     (split(0).startsWith("m.") && split(2).startsWith("\"") && split(2).endsWith("\"") && !split(2).startsWith("\"/user") && !split(2).startsWith("\"/soft"))
   }
 
@@ -97,13 +99,13 @@ class MongoIO(host: String = "localhost", port: Int = 27017) extends DB with Upd
 
   def loadEntityAliases(fname: String) = loadFile(fname, "entityAliases", "alias", filter = mArgEnTextPairFilter, arg2Strip = x => x, clean = cleanEnText, arg2Index = true)
 
-  def loadEntityIds(fname: String) = loadFile(fname, "entityIds", "id", filter = mArgTypePairFilter, clean = cleanQuotes, arg2Strip = x => x)
+  def loadEntityIds(fname: String) = loadFile(fname, "entityIds", "id", filter = mArgIdPairFilter, clean = cleanQuotes, arg2Strip = x => x)
 
   def loadEntityDescription(fname: String) = loadFile(fname, "entityDescription", "desc", filter = mArgEnTextPairFilter, clean = cleanEnText, arg2Strip = x => x)
 
   def loadEntityNotableTypes(fname: String) = loadFile(fname, "entityNotableTypes", "notabType", filter = bothMFilter)
 
-  def loadEntityTypes(fname: String) = loadFile(fname, "entityTypes", "type", filter = mArgAnyPairFilter, arg2Index = true)
+  def loadEntityTypes(fname: String) = loadFile(fname, "entityTypes", "type", filter = mArgTypePairFilter, arg2Index = true)
 
   def readOneFromDB(args: Seq[String],
                  collName: String,
