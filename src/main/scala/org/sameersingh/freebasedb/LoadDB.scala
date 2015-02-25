@@ -70,8 +70,12 @@ object NamesToIds extends MongoIO() {
     val source = io.Source.fromFile(file)
     for (line <- source.getLines()) {
       val name = line.trim
-      val m = mid(Seq(name)).values.flatten.toSeq.filter(filter _)maxBy(m => prominence(m))
-      writer.println("%s\t%s".format(name, m))
+      val allMs = mid(Seq(name)).values.flatten.toSeq.filter(filter _)
+      if(!allMs.isEmpty) {
+        val m = allMs.maxBy(m => prominence(m))
+        val typs = types(Seq(m)).values.flatten.filter(t => !t.startsWith("user") && !t.startsWith("base") && !t.startsWith("common")).toSeq
+        writer.println("%s\t%s\t%s".format(name, m, typs.mkString("\t")))
+      }
     }
     writer.flush()
     writer.close()
