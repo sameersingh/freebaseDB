@@ -4,6 +4,8 @@ import java.io.FileInputStream
 import java.util.zip.GZIPInputStream
 
 import com.mongodb.casbah.Imports._
+import com.mongodb.casbah.commons.Logging
+import org.slf4j.Logger
 
 import scala.collection.mutable.ArrayBuffer
 import scala.collection.mutable
@@ -12,7 +14,7 @@ import scala.collection.mutable
  * @author sameer
  * @since 2/23/15.
  */
-class MongoIO(host: String = "localhost", port: Int = 27017) extends DB with Update {
+class MongoIO(host: String = "localhost", port: Int = 27017) extends DB with Update with Logging {
   val dbName = "freebase"
 
   val client = MongoClient(host, port)
@@ -32,18 +34,34 @@ class MongoIO(host: String = "localhost", port: Int = 27017) extends DB with Upd
     }
 
     def forceInsert() {
-      //print("mongo: inserting %d objects... " format (buffer.size))
+      log.info("mongo: inserting %d objects... " format (buffer.size))
       coll.insert(buffer: _*)
-      //println("done.")
+      log.debug("done.")
       buffer.clear()
     }
+  }
+
+
+  override def loadRelations(rels: Iterator[(String, String, String)]): Unit = {
+    val mongoCollName = "relations"
+    val buffer = new MongoInsertBuffer(db(mongoCollName), 100000)
+    for((s,r,o) <- rels) {
+      val d = MongoDBObject("subj" -> s, "rel" -> r, "obj" -> o)
+      buffer.insert(d)
+    }
+    buffer.forceInsert()
+    buffer.coll.createIndex(MongoDBObject("subj" -> 1))
+    buffer.coll.createIndex(MongoDBObject("rel" -> 1))
+    buffer.coll.createIndex(MongoDBObject("obj" -> 1))
+    buffer.coll.createIndex(MongoDBObject("subj" -> 1, "rel" -> 1))
+    buffer.coll.createIndex(MongoDBObject("obj" -> 1, "rel" -> 1))
   }
 
   def loadFile(fname: String, mongoCollName: String,
                arg2name: String,
                arg1name: String = "entity",
-               arg1Strip: String => String = stripRDF,
-               arg2Strip: String => String = stripRDF,
+               arg1Strip: String => String = ProcessFreebaseDump.stripRDF,
+               arg2Strip: String => String = ProcessFreebaseDump.stripRDF,
                arg1Index: Boolean = true,
                arg2Index: Boolean = false,
                filter: Array[String] => Boolean = x => true,

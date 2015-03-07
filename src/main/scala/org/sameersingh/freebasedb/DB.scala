@@ -23,6 +23,8 @@ trait DB {
 
   def notableTypes(mids: Seq[String]): scala.collection.Map[String, String]
 
+  def relation(subj: Option[String], rel: Option[String], obj: Option[String]): Seq[(String, String, String)] = throw new Error("not implemented")
+
   def logitude(mids: Seq[String]): scala.collection.Map[String, Double] = throw new Error("not implemented")
 
   def latitude(mids: Seq[String]): scala.collection.Map[String, Double] = throw new Error("not implemented")
@@ -32,12 +34,6 @@ trait DB {
  * Support for loading freebase stuff into the DB
  */
 trait Update extends DB {
-
-  def stripRDF(url: String): String = {
-    if (url.startsWith("<http://rdf.freebase.com") && url.endsWith(">"))
-      url.replaceAll("<http://rdf.freebase.com/ns/", "").replaceAll("<http://rdf.freebase.com/key/", "").dropRight(1)
-    else url
-  }
 
   def loadEntityIds(file: String): Unit
   def loadEntityNames(file: String): Unit
@@ -49,4 +45,5 @@ trait Update extends DB {
   def loadGeoLocation(file: String): Unit
   def loadLongitude(file: String): Unit
   def loadLatitude(file: String): Unit
+  def loadRelations(rels: Iterator[(String, String, String)]): Unit
 }
