@@ -4,6 +4,7 @@ import java.io.{FileInputStream, FileOutputStream, PrintWriter}
 import java.util.zip.{GZIPInputStream, GZIPOutputStream}
 
 import scala.collection.immutable.HashMap
+import scala.collection.mutable
 
 /**
  * Created by sameer on 3.5.15.
@@ -97,5 +98,66 @@ object ProcessFreebaseDump {
     if (url.startsWith("<http://rdf.freebase.com") && url.endsWith(">"))
     url.replaceAll("<http://rdf.freebase.com/ns/", "").replaceAll("<http://rdf.freebase.com/key/", "").dropRight(1)
     else url
+  }
+}
+
+class RelationJoiner(rel1: (String, Int), rel2: (String, Int), baseDir: String) {
+  val rel1File = baseDir + rel1._1 + ".gz"
+  val rel2File = baseDir + rel2._1 + ".gz"
+
+  def join(): Iterator[(String, String)] = {
+    val rel1s = new mutable.HashMap[String, Set[String]]
+    //println("  Reading rel: " + rel1._1)
+    val source1 = io.Source.fromInputStream(new GZIPInputStream(new FileInputStream(rel1File)))
+    for(l <- source1.getLines(); Array(m0,m1) = l.split("\\t")) {
+      val (key,value) = if(rel1._2 == 0) (m0,m1) else (m1,m0)
+      rel1s(key) = rel1s.getOrElse(key, Set.empty) ++ Set(value)
+    }
+    source1.close()
+    //println(s"  Read ${rel1._1}, ${rel1s.size} keys.")
+    //println("  Reading rel: " + rel2._1)
+    val source2 = io.Source.fromInputStream(new GZIPInputStream(new FileInputStream(rel2File)))
+    source2.getLines().flatMap(l => {
+      val Array(m0,m1) = l.split("\\t")
+      val (key,value) = if(rel2._2 == 0) (m0,m1) else (m1,m0)
+      for(rel1m <- rel1s.getOrElse(key, Set.empty)) yield {
+        rel1m -> value
+      }
+    })
+  }
+}
+
+object RelationJoiner {
+  val baseDir = "/home/sameer/work/data/freebase/"
+
+  val joins = Seq(
+  "people.person.education|education.education.institution",
+    "organization.organization.companies_acquired|business.acquisition.company_acquired",
+    "organization.organization.board_members|organization.organization_board_membership.member",
+    "government.governmental_jurisdiction.governing_officials|government.government_position_held.office_holder",
+    "location.location.adjoin_s|location.adjoining_relationship.adjoins",
+    "celebrities.celebrity.celebrity_friends|celebrities.friendship.friend",
+    "organization.organization.partnerships|organization.organization_partnership.members",
+    "venture_capital.venture_investor.investments|venture_capital.venture_investment.company")
+
+  def performJoin(pattern: String): Unit = {
+    //println(s"Joining for $pattern")
+    val Array(rel1,rel2) = pattern.split("\\|")
+    val joiner = new RelationJoiner(rel1 -> 1, rel2 -> 0, baseDir)
+    val writer = new PrintWriter(new GZIPOutputStream(new FileOutputStream(baseDir + pattern + ".gz")))
+    var count = 0
+    for((m0,m1) <- joiner.join()) {
+      count += 1
+      writer.println(m0 + "\t" + m1)
+    }
+    println(s"$pattern\t$count triplets")
+    writer.flush
+    writer.close
+  }
+
+  def main(args: Array[String]): Unit = {
+    for(j <- joins) {
+      performJoin(j)
+    }
   }
 }
